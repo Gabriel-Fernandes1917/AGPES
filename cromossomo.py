@@ -47,7 +47,7 @@ def funCromossomo(players):
     attackers = attackers[3:]
 
     # Adicionar o restante como meio-campistas até completar 12 jogadores
-    while len(cromossomo) < 12:
+    while len(cromossomo) < 11:
         if midfielders:
             cromossomo.append(midfielders.pop(0))
         elif defenders:
