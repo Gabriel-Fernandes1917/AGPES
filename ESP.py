@@ -1,15 +1,16 @@
 import random
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from iniciarpopulacao import generate_population
 from creatDataset import players
 
-# Função para calcular CVa e CVb (essas são placeholders, você deve definir as funções reais)
+# Função para calcular CVa e CVb
 def calcular_cva(time):
-    return max(0,(sum(jogador['S'] for jogador in time) - 100)/100) #2900000 é nosso orçamento
+    return max(0, (sum(jogador['S'] for jogador in time) - 2900000) / 2900000)  # 2900000 é nosso orçamento
 
 def calcular_cvb(time):
-    return max(0,(sum(jogador['S'] for jogador in time) - 100)/100) #2900000 é nosso orçamento
+    return max(0, (sum(jogador['S'] for jogador in time) - 2900000) / 2900000)  # 2900000 é nosso orçamento
 
 # Função para classificar a população com base na dominância de Pareto
 def classificar_pareto(populacao):
@@ -67,7 +68,7 @@ def mutacao_polinomial(individuo, pm, eta_m):
         for i in range(1, len(individuo)):  # Não muta o goleiro na primeira posição
             if random.random() < pm:
                 delta = random.uniform(-1, 1)
-                mutacao = (1.0 - abs(delta))**(1.0 / (1.0 + eta_m))
+                mutacao = (1.0 - abs(delta)) ** (1.0 / (1.0 + eta_m))
                 individuo[i]['S'] = individuo[i]['S'] * (1 + delta * mutacao)
                 # Garantir que o valor da mutação não seja negativo
                 if individuo[i]['S'] < 0:
@@ -84,6 +85,12 @@ def selecionar_proxima_geracao(populacao, frente_pareto, pc, pm, eta_m):
         nova_populacao.append(filho)
     return nova_populacao
 
+# Função para calcular habilidades de ataque e defesa
+def habilidades(time):
+    attack = sum(jogador['skills']['AttackAttributelist'] for jogador in time)
+    defense = sum(jogador['skills']['DefendAttributelist'] for jogador in time)
+    return attack, defense
+
 # Parâmetros do algoritmo
 tamanho_populacao = 400
 numero_geracoes = 300
@@ -92,16 +99,31 @@ pm = 0.1  # Probabilidade de mutação
 eta_m = 30  # Parâmetro de mutação polinomial
 
 # Inicialização da população
-populacao = generate_population(players, tamanho_populacao, 100)
+populacao = generate_population(players, tamanho_populacao, 2900000)
 
 # Execução do algoritmo
 for geracao in range(numero_geracoes):
     frente_pareto = classificar_pareto(populacao)
     populacao = selecionar_proxima_geracao(populacao, frente_pareto, pc, pm, eta_m)
 
+# Plotar a frente de Pareto
+plt.figure(figsize=(10, 6))
+
+# Plotar todos os times
+for i, time in enumerate(populacao):
+    attack, defense = habilidades(time)
+    if i in frente_pareto:
+        plt.scatter(attack, defense, color='blue', label='Pareto Front' if i == frente_pareto[0] else "")  # Times na frente de Pareto em vermelho
+    else:
+        plt.scatter(attack, defense, color='blue', label='Others' if i == 0 else "")  # Demais times em azul
+
+plt.xlabel('Habilidade de Ataque')
+plt.ylabel('Habilidade de Defesa')
+plt.title('Frente de Pareto')
+plt.legend()
+plt.show()
+
 # Resultados finais
 melhor_time = populacao[0]
 print(f'Melhor time: {melhor_time}')
 pd.DataFrame(melhor_time)
-
-# len(populacao)
